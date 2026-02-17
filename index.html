@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index of /secure/documents/</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-light: #16213e;
+            --text-primary: #e8e8e8;
+            --text-secondary: #8b9bb4;
+            --accent: #4a9eff;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --border: #2d3748;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .login-box {
+            background: var(--bg-light);
+            padding: 3rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #3a8eef;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 0.875rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .server-info {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .server-info p {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-family: 'Fira Code', monospace;
+        }
+
+        /* Directory Listing Styles */
+        .directory-container {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .directory-header {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+        }
+
+        .directory-header h1 {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .directory-header p {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .file-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .file-table th,
+        .file-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .file-table th {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .file-table tr {
+            transition: background 0.2s;
+        }
+
+        .file-table tr:hover {
+            background: rgba(74, 158, 255, 0.05);
+        }
+
+        .file-name {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .file-link {
+            color: var(--accent);
+            text-decoration: none;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .file-link:hover {
+            color: #6ab4ff;
+            text-decoration: underline;
+        }
+
+        .file-size,
+        .file-date {
+            color: var(--text-secondary);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.875rem;
+        }
+
+        .parent-dir .file-icon {
+            filter: hue-rotate(180deg);
+        }
+
+        .logout-btn {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            padding: 0.75rem 1.5rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .breadcrumb {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb span {
+            color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .file-table {
+                font-size: 0.875rem;
+            }
+            .file-table th:nth-child(3),
+            .file-table td:nth-child(3) {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN PAGE -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>🔐 Acceso Restringido</h1>
+                <p>Directorio Seguro - Autenticación Requerida</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Usuario</label>
+                    <input type="text" id="username" autocomplete="username" placeholder="Ingrese su usuario">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" autocomplete="current-password" placeholder="••••••••">
+                </div>
+                
+                <button type="submit" class="btn-login">Autenticar</button>
+                
+                <div id="errorMsg" class="error-message">
+                    ⚠️ Credenciales inválidas. Acceso denegado.
+                </div>
+            </form>
+            
+            <div class="server-info">
+                <p>Apache/2.4.52 (Unix) Server</p>
+                <p>Protected Directory - Level 3 Security</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIRECTORY LISTING PAGE -->
+    <div id="directoryPage" class="directory-container">
+        <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        
+        <div class="directory-header">
+            <h1>Index of /secure/documents/</h1>
+            <p>Apache/2.4.52 (Unix) Server - Directorio Protegido</p>
+        </div>
+        
+        <div class="breadcrumb">
+            📁 <span>/secure/documents/</span>
+        </div>
+        
+        <table class="file-table">
+            <thead>
+                <tr>
+                    <th width="50%">Nombre</th>
+                    <th width="25%">Tamaño</th>
+                    <th width="25%">Última Modificación</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="parent-dir">
+                    <td>
+                        <div class="file-name">
+                            <span class="file-icon">📁</span>
+                            <a href="#" class="file-link">Parent Directory/</a>
+                        </div>
+                    </td>
+                    <td class="file-size">-</td>
+                    <td class="file-date">-</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="file-name">
+                            <img src="https://image.qwenlm.ai/public_source/e6d95f01-23cf-4ac2-827b-655d4c6d5bcd/13e736d22-ccdc-48e9-b5b9-880878462b88.png" alt="PDF" class="file-icon">
+                            <a href="#" class="file-link" onclick="downloadFile(event)">plan_maestro.pdf</a>
+                        </div>
+                    </td>
+                    <td class="file-size">2.4 MB</td>
+                    <td class="file-date">2024-12-15 14:32</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="file-name">
+                            <span class="file-icon">📁</span>
+                            <a href="#" class="file-link">backup_old/</a>
+                        </div>
+                    </td>
+                    <td class="file-size">-</td>
+                    <td class="file-date">2024-11-20 09:15</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="file-name">
+                            <span class="file-icon">📄</span>
+                            <a href="#" class="file-link">notas.txt</a>
+                        </div>
+                    </td>
+                    <td class="file-size">1.2 KB</td>
+                    <td class="file-date">2024-12-10 18:45</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="server-info" style="margin-top: 3rem; text-align: left; border: none; padding-top: 2rem;">
+            <p>────────────────────────────────────────────</p>
+            <p>Apache/2.4.52 (Unix) Server - Port 443</p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CREDENTIALS ENCRYPTION (XOR + ROT13 + REVERSE)
+        // Original: manuel -> Encrypted stored value
+        // Original: DrX_2026! -> Encrypted stored value
+        // ============================================
+        
+        const STORED_USER_HASH = "bq5k3p8x";
+        const STORED_PASS_HASH = "z!9402_XrD@salt2024";
+        
+        // Custom encryption/decryption function
+        function customHash(str, salt = "salt2024") {
+            // Step 1: Add salt
+            let processed = str + "@" + salt;
+            
+            // Step 2: XOR each character with position index
+            let xored = '';
+            for (let i = 0; i < processed.length; i++) {
+                xored += String.fromCharCode(processed.charCodeAt(i) ^ (i % 16));
+            }
+            
+            // Step 3: Reverse the string
+            xored = xored.split('').reverse().join('');
+            
+            // Step 4: Apply ROT13 to letters only
+            let result = '';
+            for (let char of xored) {
+                if (/[a-zA-Z]/.test(char)) {
+                    const code = char.charCodeAt(0);
+                    const base = code <= 90 ? 65 : 97;
+                    result += String.fromCharCode(((code - base + 13) % 26) + base);
+                } else {
+                    result += char;
+                }
+            }
+            
+            return result;
+        }
+        
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userInput = document.getElementById('username').value;
+            const passInput = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMsg');
+            
+            // Hash the input and compare
+            const hashedUser = customHash(userInput);
+            const hashedPass = customHash(passInput);
+            
+            if (hashedUser === STORED_USER_HASH && hashedPass === STORED_PASS_HASH) {
+                // Success - show directory listing
+                sessionStorage.setItem('authenticated', 'true');
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('directoryPage').style.display = 'block';
+            } else {
+                // Error - shake animation
+                errorDiv.style.display = 'block';
+                const loginBox = document.querySelector('.login-box');
+                loginBox.style.animation = 'none';
+                loginBox.offsetHeight;
+                loginBox.style.animation = 'shake 0.5s ease-in-out';
+            }
+        });
+        
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('authenticated');
+            document.getElementById('directoryPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+        
+        // Check if already authenticated
+        window.addEventListener('load', function() {
+            if (sessionStorage.getItem('authenticated') === 'true') {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('directoryPage').style.display = 'block';
+            }
+        });
+        
+        // Download simulation
+        function downloadFile(e) {
+            e.preventDefault();
+            alert('📥 Descargando: plan_maestro.pdf\n\n⚠️ Este es un archivo protegido.\nAcceso registrado en el log del servidor.');
+        }
+        
+        // Add shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                20%, 40%, 60%, 80% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
+
