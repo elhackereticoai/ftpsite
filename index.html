@@ -340,7 +340,7 @@
                 <tr>
                     <td>
                         <div class="file-name">
-                            <img src="https://image.qwenlm.ai/public_source/e6d95f01-23cf-4ac2-827b-655d4c6d5bcd/13e736d22-ccdc-48e9-b5b9-880878462b88.png" alt="PDF" class="file-icon">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e74c3c'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z'/%3E%3C/svg%3E" alt="PDF" class="file-icon">
                             <a href="#" class="file-link" onclick="downloadFile(event)">plan_maestro.pdf</a>
                         </div>
                     </td>
@@ -378,40 +378,30 @@
 
     <script>
         // ============================================
-        // CREDENTIALS ENCRYPTION (XOR + ROT13 + REVERSE)
-        // Original: manuel -> Encrypted stored value
-        // Original: DrX_2026! -> Encrypted stored value
+        // CREDENTIALS ENCRYPTED WITH ROT47 CIPHER
+        // ROT47 is a printable ASCII substitution cipher
+        // Not base64, not MD5 - harder to identify at first glance
+        // ============================================
+        // 
+        // To decrypt: Apply ROT47 again (it's symmetric)
+        // Encrypted user: >2?F6=  -> ROT47 -> manuel
+        // Encrypted pass: sC)0a_aeP  -> ROT47 -> DrX_2026!
         // ============================================
         
-        const STORED_USER_HASH = "bq5k3p8x";
-        const STORED_PASS_HASH = "z!9402_XrD@salt2024";
+        const ENCRYPTED_USER = ">2?F6=";
+        const ENCRYPTED_PASS = "sC)0a_aeP";
         
-        // Custom encryption/decryption function
-        function customHash(str, salt = "salt2024") {
-            // Step 1: Add salt
-            let processed = str + "@" + salt;
-            
-            // Step 2: XOR each character with position index
-            let xored = '';
-            for (let i = 0; i < processed.length; i++) {
-                xored += String.fromCharCode(processed.charCodeAt(i) ^ (i % 16));
-            }
-            
-            // Step 3: Reverse the string
-            xored = xored.split('').reverse().join('');
-            
-            // Step 4: Apply ROT13 to letters only
+        // ROT47 encryption/decryption function (symmetric)
+        function rot47(str) {
             let result = '';
-            for (let char of xored) {
-                if (/[a-zA-Z]/.test(char)) {
-                    const code = char.charCodeAt(0);
-                    const base = code <= 90 ? 65 : 97;
-                    result += String.fromCharCode(((code - base + 13) % 26) + base);
-                } else {
-                    result += char;
+            for (let i = 0; i < str.length; i++) {
+                let charCode = str.charCodeAt(i);
+                // ROT47 works on printable ASCII (33-126)
+                if (charCode >= 33 && charCode <= 126) {
+                    charCode = ((charCode - 33 + 47) % 94) + 33;
                 }
+                result += String.fromCharCode(charCode);
             }
-            
             return result;
         }
         
@@ -423,11 +413,11 @@
             const passInput = document.getElementById('password').value;
             const errorDiv = document.getElementById('errorMsg');
             
-            // Hash the input and compare
-            const hashedUser = customHash(userInput);
-            const hashedPass = customHash(passInput);
+            // Encrypt user input using ROT47 and compare with stored encrypted values
+            const encryptedUser = rot47(userInput);
+            const encryptedPass = rot47(passInput);
             
-            if (hashedUser === STORED_USER_HASH && hashedPass === STORED_PASS_HASH) {
+            if (encryptedUser === ENCRYPTED_USER && encryptedPass === ENCRYPTED_PASS) {
                 // Success - show directory listing
                 sessionStorage.setItem('authenticated', 'true');
                 document.getElementById('loginPage').style.display = 'none';
