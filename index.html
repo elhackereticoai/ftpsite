@@ -259,6 +259,20 @@
             color: var(--accent);
         }
 
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--accent);
+        }
+
+        /* Hidden file input for download */
+        #downloadFrame {
+            display: none;
+        }
+
         @media (max-width: 768px) {
             .file-table {
                 font-size: 0.875rem;
@@ -310,12 +324,12 @@
         <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
         
         <div class="directory-header">
-            <h1>Index of /secure/documents/</h1>
+            <h1 id="directoryTitle">Index of /secure/documents/</h1>
             <p>Apache/2.4.52 (Unix) Server - Directorio Protegido</p>
         </div>
         
-        <div class="breadcrumb">
-            📁 <span>/secure/documents/</span>
+        <div class="breadcrumb" id="breadcrumb">
+            📁 <a href="#" onclick="navigateTo('root')">/secure/documents/</a>
         </div>
         
         <table class="file-table">
@@ -326,47 +340,8 @@
                     <th width="25%">Última Modificación</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr class="parent-dir">
-                    <td>
-                        <div class="file-name">
-                            <span class="file-icon">📁</span>
-                            <a href="#" class="file-link">Parent Directory/</a>
-                        </div>
-                    </td>
-                    <td class="file-size">-</td>
-                    <td class="file-date">-</td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="file-name">
-                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e74c3c'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v7h7v9H6z'/%3E%3C/svg%3E" alt="PDF" class="file-icon">
-                            <a href="/plan_maestro.pdf" class="file-link" onclick="downloadFile(event)">plan_maestro.pdf</a>
-                        </div>
-                    </td>
-                    <td class="file-size">2.4 MB</td>
-                    <td class="file-date">2024-12-15 14:32</td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="file-name">
-                            <span class="file-icon">📁</span>
-                            <a href="/backup_old" class="file-link">backup_old/</a>
-                        </div>
-                    </td>
-                    <td class="file-size">-</td>
-                    <td class="file-date">2024-11-20 09:15</td>
-                </tr>
-                <tr>
-                    <td>
-                        <div class="file-name">
-                            <span class="file-icon">📄</span>
-                            <a href="#" class="file-link">notas.txt</a>
-                        </div>
-                    </td>
-                    <td class="file-size">1.2 KB</td>
-                    <td class="file-date">2024-12-10 18:45</td>
-                </tr>
+            <tbody id="fileList">
+                <!-- Files will be populated by JavaScript -->
             </tbody>
         </table>
         
@@ -375,6 +350,9 @@
             <p>Apache/2.4.52 (Unix) Server - Port 443</p>
         </div>
     </div>
+
+    <!-- Hidden iframe for downloads -->
+    <iframe id="downloadFrame"></iframe>
 
     <script>
         // ============================================
@@ -390,6 +368,38 @@
         
         const ENCRYPTED_USER = ">2?F6=";
         const ENCRYPTED_PASS = "sC)0a_aeP";
+        
+        // File system structure
+        const fileSystem = {
+            'root': {
+                path: '/secure/documents/',
+                parent: null,
+                files: [
+                    { name: 'plan_maestro.pdf', type: 'file', size: '2.4 MB', date: '2024-12-15 14:32', icon: '📄' },
+                    { name: 'backup_old', type: 'folder', size: '-', date: '2024-11-20 09:15', icon: '📁' },
+                    { name: 'notas.txt', type: 'file', size: '1.2 KB', date: '2024-12-10 18:45', icon: '📄' }
+                ]
+            },
+            'backup_old': {
+                path: '/secure/documents/backup_old/',
+                parent: 'root',
+                files: [
+                    { name: 'config.json', type: 'file', size: '4.8 KB', date: '2024-11-18 22:10', icon: '📄' },
+                    { name: 'db_backup.sql', type: 'file', size: '156 MB', date: '2024-11-15 03:45', icon: '📄' },
+                    { name: 'old_logs', type: 'folder', size: '-', date: '2024-10-01 12:00', icon: '📁' }
+                ]
+            },
+            'old_logs': {
+                path: '/secure/documents/backup_old/old_logs/',
+                parent: 'backup_old',
+                files: [
+                    { name: 'access.log', type: 'file', size: '2.1 MB', date: '2024-09-30 23:59', icon: '📄' },
+                    { name: 'error.log', type: 'file', size: '856 KB', date: '2024-09-30 23:59', icon: '📄' }
+                ]
+            }
+        };
+        
+        let currentDirectory = 'root';
         
         // ROT47 encryption/decryption function (symmetric)
         function rot47(str) {
@@ -422,6 +432,7 @@
                 sessionStorage.setItem('authenticated', 'true');
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('directoryPage').style.display = 'block';
+                renderDirectory('root');
             } else {
                 // Error - shake animation
                 errorDiv.style.display = 'block';
@@ -440,6 +451,7 @@
             document.getElementById('username').value = '';
             document.getElementById('password').value = '';
             document.getElementById('errorMsg').style.display = 'none';
+            currentDirectory = 'root';
         }
         
         // Check if already authenticated
@@ -447,13 +459,133 @@
             if (sessionStorage.getItem('authenticated') === 'true') {
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('directoryPage').style.display = 'block';
+                renderDirectory('root');
             }
         });
         
-        // Download simulation
-        function downloadFile(e) {
-            e.preventDefault();
-            alert('📥 Descargando: plan_maestro.pdf\n\n⚠️ Este es un archivo protegido.\nAcceso registrado en el log del servidor.');
+        // Render directory contents
+        function renderDirectory(dirKey) {
+            currentDirectory = dirKey;
+            const dir = fileSystem[dirKey];
+            const fileList = document.getElementById('fileList');
+            const directoryTitle = document.getElementById('directoryTitle');
+            const breadcrumb = document.getElementById('breadcrumb');
+            
+            directoryTitle.textContent = `Index of ${dir.path}`;
+            
+            // Build breadcrumb
+            let breadcrumbHTML = '📁 ';
+            if (dir.parent) {
+                breadcrumbHTML += `<a href="#" onclick="navigateTo('${dir.parent}'); return false;">/secure/documents/</a>`;
+                if (dirKey === 'backup_old') {
+                    breadcrumbHTML += ` / <a href="#" onclick="navigateTo('backup_old'); return false;">backup_old/</a>`;
+                } else if (dirKey === 'old_logs') {
+                    breadcrumbHTML += ` / <a href="#" onclick="navigateTo('backup_old'); return false;">backup_old/</a> / <span style="color: var(--accent);">old_logs/</span>`;
+                }
+            } else {
+                breadcrumbHTML += `<a href="#" onclick="navigateTo('root'); return false;">/secure/documents/</a>`;
+            }
+            breadcrumb.innerHTML = breadcrumbHTML;
+            
+            // Build file list
+            let html = '';
+            
+            // Parent directory link (if not root)
+            if (dir.parent) {
+                html += `
+                    <tr class="parent-dir">
+                        <td>
+                            <div class="file-name">
+                                <span class="file-icon">📁</span>
+                                <a href="#" class="file-link" onclick="navigateTo('${dir.parent}'); return false;">Parent Directory/</a>
+                            </div>
+                        </td>
+                        <td class="file-size">-</td>
+                        <td class="file-date">-</td>
+                    </tr>
+                `;
+            }
+            
+            // Files and folders
+            dir.files.forEach(file => {
+                const isFolder = file.type === 'folder';
+                const icon = isFolder ? '📁' : getFileIcon(file.name);
+                const linkClass = isFolder ? 'folder-link' : 'file-link';
+                const onClick = isFolder 
+                    ? `onclick="navigateTo('${file.name}'); return false;"`
+                    : `onclick="downloadFile('${file.name}'); return false;"`;
+                
+                html += `
+                    <tr>
+                        <td>
+                            <div class="file-name">
+                                <span class="file-icon">${icon}</span>
+                                <a href="#" class="${linkClass}" ${onClick}>${file.name}${isFolder ? '/' : ''}</a>
+                            </div>
+                        </td>
+                        <td class="file-size">${file.size}</td>
+                        <td class="file-date">${file.date}</td>
+                    </tr>
+                `;
+            });
+            
+            fileList.innerHTML = html;
+        }
+        
+        // Get file icon based on extension
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'pdf': '📄',
+                'json': '📄',
+                'txt': '📄',
+                'sql': '🗄️',
+                'log': '📋',
+                'html': '🌐',
+                'css': '🎨',
+                'js': '⚡',
+                'png': '🖼️',
+                'jpg': '🖼️',
+                'gif': '🖼️'
+            };
+            return icons[ext] || '📄';
+        }
+        
+        // Navigate to directory
+        function navigateTo(dirKey) {
+            if (fileSystem[dirKey]) {
+                renderDirectory(dirKey);
+            }
+        }
+        
+        // Download file
+        function downloadFile(filename) {
+            const downloadFrame = document.getElementById('downloadFrame');
+            
+            // Create actual download link to the file on the server
+            const filePath = getFilePath(filename);
+            
+            // Use iframe to trigger download
+            downloadFrame.src = filePath;
+            
+            // Show download notification
+            console.log(`📥 Iniciando descarga: ${filename}`);
+            console.log(`📁 Ruta: ${filePath}`);
+            
+            // Optional: Show alert for demo purposes
+            // alert(`📥 Descargando: ${filename}\n\n⚠️ Archivo registrado en el log del servidor.`);
+        }
+        
+        // Get actual file path on server
+        function getFilePath(filename) {
+            if (currentDirectory === 'root') {
+                return `./${filename}`;
+            } else if (currentDirectory === 'backup_old') {
+                return `./backup_old/${filename}`;
+            } else if (currentDirectory === 'old_logs') {
+                return `./backup_old/old_logs/${filename}`;
+            }
+            return `./${filename}`;
         }
         
         // Add shake animation
